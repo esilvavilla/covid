@@ -14,7 +14,7 @@ from scipy import stats
 from scipy.optimize import curve_fit
 
 
-st.title('APP COVID19 Colombia 2020 - tmp')
+st.title('APP COVID19 Colombia 2020')
 
 # Example authenticated client (needed for non-public datasets):
 client = Socrata("www.datos.gov.co", 
