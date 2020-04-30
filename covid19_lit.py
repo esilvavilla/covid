@@ -14,7 +14,7 @@ from scipy import stats
 from scipy.optimize import curve_fit
 
 
-st.title('APP COVID19 Local')
+st.title('APP COVID19 Colombia 2020 - tmp')
 
 # Example authenticated client (needed for non-public datasets):
 client = Socrata("www.datos.gov.co", 
@@ -24,25 +24,29 @@ client = Socrata("www.datos.gov.co",
 
 results = client.get("gt2j-8ykr", limit=10000)
 
+
+
 # Convert to pandas DataFrame
 df = pd.DataFrame.from_records(results)
 
 # DataFrame with the information
 #.apply(lambda x: datetime.strptime(x, '%Y%m%d%H'))
-df['fecha_de_notificaci_n'] = df['fecha_de_notificaci_n'].apply(lambda x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%f'))
+df['fecha_de_notificaci_n'] = df['fecha_de_notificaci_n'].apply(lambda row: datetime.strptime(row, '%Y-%m-%dT%H:%M:%S.%f'))
 df['fecha_de_notificaci_n'] = pd.to_datetime(df['fecha_de_notificaci_n'])
 
 df['fis'] = df['fis'].replace('Asintomático', '1999-01-01T00:00:00.000')
 df['fis'] = df['fis'].apply(lambda x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%f'))
 df['fis'] = pd.to_datetime(df['fis'])
 
-df['fecha_diagnostico'] = df['fecha_diagnostico'].apply(lambda x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%f'))
+df['fecha_diagnostico'] = df['fecha_diagnostico'].apply(lambda row: datetime.strptime(row, '%Y-%m-%dT%H:%M:%S.%f'))
 df['fecha_diagnostico'] = pd.to_datetime(df['fecha_diagnostico'])
 
 to_remove_in_df = df['fecha_de_muerte'][0]
 
+
 df['fecha_recuperado'] = df['fecha_recuperado'].replace(to_remove_in_df, datetime.now().strftime('%Y-%m-%dT00:00:00.000'))
-df['fecha_recuperado'] = df['fecha_recuperado'].apply(lambda x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%f'))
+df['fecha_recuperado'] = df['fecha_recuperado'].replace(np.nan, datetime.now().strftime('%Y-%m-%dT00:00:00.000'))
+df['fecha_recuperado'] = df['fecha_recuperado'].apply(lambda row: datetime.strptime(row, '%Y-%m-%dT%H:%M:%S.%f'))
 df['fecha_recuperado'] = pd.to_datetime(df['fecha_recuperado'])
 
 tiemp_diag = []
@@ -119,7 +123,7 @@ st.bar_chart(dfcum_sum)
 
 st.title('Fit a curva experimental')
 r'''
-$$n_e(t) = n_e(0) \times R_0^{t/d} + C$$
+$$n_e(t) = n_e(0) \times R_0^{t}$$
 '''
 
 x_to_fit = np.array(range(len(cum_sum)))
