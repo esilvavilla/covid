@@ -31,18 +31,21 @@ df = pd.DataFrame.from_records(results)
 
 # DataFrame with the information
 #.apply(lambda x: datetime.strptime(x, '%Y%m%d%H'))
+to_remove_in_df = df['fecha_de_muerte'][0]
+#st.write(to_remove_in_df)
+
+df['fecha_de_notificaci_n'] = df['fecha_de_notificaci_n'].replace(to_remove_in_df, datetime.now().strftime('%Y-%m-%dT00:00:00.000'))
 df['fecha_de_notificaci_n'] = df['fecha_de_notificaci_n'].apply(lambda row: datetime.strptime(row, '%Y-%m-%dT%H:%M:%S.%f'))
 df['fecha_de_notificaci_n'] = pd.to_datetime(df['fecha_de_notificaci_n'])
 
+df['fis'] = df['fis'].replace(to_remove_in_df, datetime.now().strftime('%Y-%m-%dT00:00:00.000'))
 df['fis'] = df['fis'].replace('Asintomático', '1999-01-01T00:00:00.000')
 df['fis'] = df['fis'].apply(lambda x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%f'))
 df['fis'] = pd.to_datetime(df['fis'])
 
+df['fecha_diagnostico'] = df['fecha_diagnostico'].replace(to_remove_in_df, datetime.now().strftime('%Y-%m-%dT00:00:00.000'))
 df['fecha_diagnostico'] = df['fecha_diagnostico'].apply(lambda row: datetime.strptime(row, '%Y-%m-%dT%H:%M:%S.%f'))
 df['fecha_diagnostico'] = pd.to_datetime(df['fecha_diagnostico'])
-
-to_remove_in_df = df['fecha_de_muerte'][0]
-
 
 df['fecha_recuperado'] = df['fecha_recuperado'].replace(to_remove_in_df, datetime.now().strftime('%Y-%m-%dT00:00:00.000'))
 df['fecha_recuperado'] = df['fecha_recuperado'].replace(np.nan, datetime.now().strftime('%Y-%m-%dT00:00:00.000'))
@@ -67,7 +70,7 @@ for ii in range(len(df['id_de_caso'])):
         tiemp_recup.append(np.nan)
 df['Tiempo_recuperado'] = tiemp_recup
 
-dfcum_sum = df.groupby(df['fecha_diagnostico'])['id_de_caso'].count()
+dfcum_sum = df.groupby(df['fecha_reporte_web'])['id_de_caso'].count()
 cum_sum = np.cumsum(dfcum_sum)
 
 # DATOS
@@ -82,7 +85,8 @@ st.write(datetime.today().strftime('%d-%m-%Y'))
 st.title('Casos')
 '## Número total de casos:',len(df)
 '## Número de nuevos casos:',cum_sum[-1]-cum_sum[-2]
-'## Número de muertos:',df['id_de_caso'][df['fecha_de_muerte'] != to_remove_in_df].count()
+#st.write(dfcum_sum[-1],dfcum_sum[-2])
+'## Número de muertos:',df['id_de_caso'][df['estado'] == 'Fallecido'].count()
 '## Número de recuperados:',df['id_de_caso'][df['atenci_n'] == 'Recuperado'].count()
 
 
