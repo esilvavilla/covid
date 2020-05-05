@@ -12,15 +12,15 @@ from collections import Counter
 import seaborn as sns
 from scipy import stats
 from scipy.optimize import curve_fit
-import variables
+import Variables as variabs
 
 st.title('APP COVID19 Colombia 2020')
 
 # Example authenticated client (needed for non-public datasets):
-client = Socrata(variables.DATOSABIERTOS_URL, 
-                variables.DATOSABIERTOS_KEY, 
-                username=variables.DATOSABIERTOS_USN, 
-                password=variables.DATOSABIERTOS_PWD)
+client = Socrata(variabs.DATOSABIERTOS_URL, 
+                variabs.DATOSABIERTOS_KEY, 
+                username=variabs.DATOSABIERTOS_USN, 
+                password=variabs.DATOSABIERTOS_PWD)
 
 results = client.get("gt2j-8ykr", limit=10000)
 
