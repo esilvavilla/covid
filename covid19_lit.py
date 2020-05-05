@@ -12,19 +12,17 @@ from collections import Counter
 import seaborn as sns
 from scipy import stats
 from scipy.optimize import curve_fit
-
+import variables
 
 st.title('APP COVID19 Colombia 2020')
 
 # Example authenticated client (needed for non-public datasets):
-client = Socrata("www.datos.gov.co", 
-                "ymgH2QpK9Z5cSKBNlKgtuzWZP", 
-                username="esteban.silvav@udea.edu.co", 
-                password="Nomeacuerdodatosabiertos_1")
+client = Socrata(variables.DATOSABIERTOS_URL, 
+                variables.DATOSABIERTOS_KEY, 
+                username=variables.DATOSABIERTOS_USN, 
+                password=variables.DATOSABIERTOS_PWD)
 
 results = client.get("gt2j-8ykr", limit=10000)
-
-
 
 # Convert to pandas DataFrame
 df = pd.DataFrame.from_records(results)
@@ -32,25 +30,33 @@ df = pd.DataFrame.from_records(results)
 # DataFrame with the information
 #.apply(lambda x: datetime.strptime(x, '%Y%m%d%H'))
 to_remove_in_df = df['fecha_de_muerte'][0]
+to_remote_in_dt = '1999-01-01T00:00:00.000'
+#to_change_in_date = 
 #st.write(to_remove_in_df)
 
-df['fecha_de_notificaci_n'] = df['fecha_de_notificaci_n'].replace(to_remove_in_df, datetime.now().strftime('%Y-%m-%dT00:00:00.000'))
+
+df['fecha_de_notificaci_n'] = df['fecha_de_notificaci_n'].replace(to_remove_in_df, to_remote_in_dt)
 df['fecha_de_notificaci_n'] = df['fecha_de_notificaci_n'].apply(lambda row: datetime.strptime(row, '%Y-%m-%dT%H:%M:%S.%f'))
 df['fecha_de_notificaci_n'] = pd.to_datetime(df['fecha_de_notificaci_n'])
 
-df['fis'] = df['fis'].replace(to_remove_in_df, datetime.now().strftime('%Y-%m-%dT00:00:00.000'))
-df['fis'] = df['fis'].replace('Asintomático', '1999-01-01T00:00:00.000')
+df['fis'] = df['fis'].replace(to_remove_in_df, to_remote_in_dt)
+df['fis'] = df['fis'].replace('Asintomático', to_remote_in_dt)
 df['fis'] = df['fis'].apply(lambda x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%f'))
 df['fis'] = pd.to_datetime(df['fis'])
 
-df['fecha_diagnostico'] = df['fecha_diagnostico'].replace(to_remove_in_df, datetime.now().strftime('%Y-%m-%dT00:00:00.000'))
+df['fecha_diagnostico'] = df['fecha_diagnostico'].replace(to_remove_in_df, to_remote_in_dt)
 df['fecha_diagnostico'] = df['fecha_diagnostico'].apply(lambda row: datetime.strptime(row, '%Y-%m-%dT%H:%M:%S.%f'))
 df['fecha_diagnostico'] = pd.to_datetime(df['fecha_diagnostico'])
 
-df['fecha_recuperado'] = df['fecha_recuperado'].replace(to_remove_in_df, datetime.now().strftime('%Y-%m-%dT00:00:00.000'))
-df['fecha_recuperado'] = df['fecha_recuperado'].replace(np.nan, datetime.now().strftime('%Y-%m-%dT00:00:00.000'))
+df['fecha_recuperado'] = df['fecha_recuperado'].replace(to_remove_in_df, to_remote_in_dt)
+df['fecha_recuperado'] = df['fecha_recuperado'].replace(np.nan, to_remote_in_dt)
 df['fecha_recuperado'] = df['fecha_recuperado'].apply(lambda row: datetime.strptime(row, '%Y-%m-%dT%H:%M:%S.%f'))
 df['fecha_recuperado'] = pd.to_datetime(df['fecha_recuperado'])
+
+df['fecha_reporte_web'] = df['fecha_reporte_web'].replace(to_remove_in_df, np.nan)
+#df['fecha_reporte_web'] = df['fecha_reporte_web'].replace(np.nan, to_remote_in_dt)
+df['fecha_reporte_web'] = df['fecha_reporte_web'].apply(lambda row: datetime.strptime(row, '%Y-%m-%dT%H:%M:%S.%f'))
+df['fecha_reporte_web'] = pd.to_datetime(df['fecha_reporte_web'])
 
 tiemp_diag = []
 for ii in range(len(df['id_de_caso'])):
@@ -64,14 +70,16 @@ df['Tiempo_diagnostico'] = tiemp_diag
 tiemp_recup = []
 for ii in range(len(df['id_de_caso'])):
     dif_days = (df['fecha_recuperado'][ii] - df['fis'][ii]).days
-    if (dif_days < 200) and (df['fecha_de_muerte'][ii] == to_remove_in_df):
+    if (abs(dif_days) > 1) and (abs(dif_days) < 80) and (df['fecha_de_muerte'][ii] == to_remove_in_df):
         tiemp_recup.append(dif_days)
     else:
         tiemp_recup.append(np.nan)
 df['Tiempo_recuperado'] = tiemp_recup
 
+# Cumulative distribution
 dfcum_sum = df.groupby(df['fecha_reporte_web'])['id_de_caso'].count()
 cum_sum = np.cumsum(dfcum_sum)
+
 
 # DATOS
 st.title('Datos')
